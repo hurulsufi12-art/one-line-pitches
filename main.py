@@ -15,11 +15,19 @@ TEXT = (
 )
 
 
-def main():
+def validate(text):
     # Fail loudly, never silently ship an invalid entry: the sealed
     # scorer gives Valid 0 to anything outside 1-240 chars.
-    assert 1 <= len(TEXT) <= 240, f"pitch is {len(TEXT)} chars, gate is 1-240"
-    assert TEXT.strip() == TEXT and TEXT.strip(), "pitch must not be blank"
+    assert 1 <= len(text) <= 240, f"pitch is {len(text)} chars, gate is 1-240"
+    assert text.strip() == text and text.strip(), "pitch must not be blank"
+    # Control characters are invisible in the output file but count
+    # toward the gate and break the one-line contract, so reject them.
+    bad = [c for c in text if ord(c) < 0x20 or ord(c) == 0x7F]
+    assert not bad, f"pitch contains control characters: {bad!r}"
+
+
+def main():
+    validate(TEXT)
     os.makedirs("/output", exist_ok=True)
     with open("/output/entry.txt", "w", encoding="utf-8") as f:
         f.write(TEXT)
